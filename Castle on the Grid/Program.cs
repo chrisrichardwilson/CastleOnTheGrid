@@ -21,8 +21,26 @@ namespace Castle_on_the_Grid
 
     public struct Point
     {
+        public Point(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
+
         public int X;
         public int Y;
+    }
+
+    public struct Line
+    {
+        public Line(int x1, int y1, int x2, int y2)
+        {
+            Start = new Point(x1, y1);
+            End = new Point(x2, y2);
+        }
+
+        public Point Start;
+        public Point End;
     }
 
     class CastleSolver
@@ -36,8 +54,12 @@ namespace Castle_on_the_Grid
         public void Solve()
         {
             readInput();
+            getInterestingLines();
         }
 
+        /// <summary>
+        /// read console inputs and populate sizeOfGrid, forbiddenCells, start and end
+        /// </summary>
         private void readInput()
         {
             sizeOfGrid = int.Parse(Console.ReadLine());
@@ -56,6 +78,25 @@ namespace Castle_on_the_Grid
             start.Y = positionNumbers[1];
             end.X = positionNumbers[2];
             end.Y = positionNumbers[3];
+        }
+
+        /// <summary>
+        /// get lines from start and end point and all lines that touch a forbidden cell
+        /// </summary>
+        /// <returns></returns>
+        private List<Line> getInterestingLines()
+        {
+            List<Line> returnValue = new List<Line>();
+
+            returnValue.Add(new Line
+            (
+                Enumerable.Range(0, sizeOfGrid).Where(i => i < start.X && (i == 0 ||forbiddenCells[start.Y][i-1])).Max(),
+                start.Y,
+                Enumerable.Range(0, sizeOfGrid).Where(i => i > start.X && (i == sizeOfGrid - 1 || forbiddenCells[start.Y][i+1])).Min(),
+                start.Y
+            ));
+
+            return returnValue;
         }
 
     }
