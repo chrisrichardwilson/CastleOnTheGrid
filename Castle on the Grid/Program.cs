@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+/// <summary>
+/// Solution to https://www.hackerrank.com/challenges/castle-on-the-grid
+/// </summary>
 namespace Castle_on_the_Grid
 {     
 
