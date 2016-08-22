@@ -1,0 +1,6 @@
+c:\users\chris\documents\visual studio 2015\Projects\HackerRank\Castle on the Grid\Castle on the Grid\bin\Debug\Castle on the Grid.exe.config
+c:\users\chris\documents\visual studio 2015\Projects\HackerRank\Castle on the Grid\Castle on the Grid\bin\Debug\Castle on the Grid.exe
+c:\users\chris\documents\visual studio 2015\Projects\HackerRank\Castle on the Grid\Castle on the Grid\bin\Debug\Castle on the Grid.pdb
+c:\users\chris\documents\visual studio 2015\Projects\HackerRank\Castle on the Grid\Castle on the Grid\obj\Debug\Castle on the Grid.csprojResolveAssemblyReference.cache
+c:\users\chris\documents\visual studio 2015\Projects\HackerRank\Castle on the Grid\Castle on the Grid\obj\Debug\Castle on the Grid.exe
+c:\users\chris\documents\visual studio 2015\Projects\HackerRank\Castle on the Grid\Castle on the Grid\obj\Debug\Castle on the Grid.pdb
