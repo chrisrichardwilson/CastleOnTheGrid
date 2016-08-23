@@ -48,6 +48,7 @@ namespace Castle_on_the_Grid
         const char forbiddenCellChar = 'X';
         int sizeOfGrid;
         List<List<bool>> forbiddenCells = new List<List<bool>>();
+        List<Point> forbiddenCellPoints = new List<Point>();
         Point start;
         Point end;
 
@@ -64,13 +65,22 @@ namespace Castle_on_the_Grid
         {
             sizeOfGrid = int.Parse(Console.ReadLine());
 
+            int x = 0;
+            int y = 0;
             for (int i = 0; i < sizeOfGrid; i++)
             {
                 string row = Console.ReadLine();
                 List<bool> rowForbiddenCells = new List<bool>();
                 foreach (char cell in row)
-                    rowForbiddenCells.Add(cell == 'X');
+                {
+                    rowForbiddenCells.Add(cell == forbiddenCellChar);
+                    if ((cell == forbiddenCellChar))
+                        forbiddenCellPoints.Add(new Point(x, y));
+                    x++;
+                }
                 forbiddenCells.Add(rowForbiddenCells);
+                y++;
+                x = 0;
             }
 
             int[] positionNumbers = Array.ConvertAll(Console.ReadLine().Split(' '), Int32.Parse);
@@ -88,13 +98,43 @@ namespace Castle_on_the_Grid
         {
             List<Line> returnValue = new List<Line>();
 
-            returnValue.Add(new Line
-            (
-                Enumerable.Range(0, sizeOfGrid).Where(i => i < start.X && (i == 0 ||forbiddenCells[start.Y][i-1])).Max(),
-                start.Y,
-                Enumerable.Range(0, sizeOfGrid).Where(i => i > start.X && (i == sizeOfGrid - 1 || forbiddenCells[start.Y][i+1])).Min(),
-                start.Y
-            ));
+            foreach (Point p in new List<Point>() { start, end })
+            {
+                returnValue.Add(new Line
+                (
+                    Enumerable.Range(0, sizeOfGrid) //try all integers up to the size of the grid
+                        .Where(i => i <= p.X //cells left of the p
+                        && (i == 0 || forbiddenCells[p.Y][i - 1])) //get 0 (edge of grid) or any forbidden cells
+                        .Max(), //set left most position to most restrictive cell
+                    p.Y,
+                    Enumerable.Range(0, sizeOfGrid).Where(i => i >= p.X && (i == sizeOfGrid - 1 || forbiddenCells[p.Y][i + 1])).Min(),
+                    p.Y
+                ));
+
+                //add vertical line going through the p/end, bounded by edges of grid or forbidden cells
+                returnValue.Add(new Line
+                (
+                    p.X,
+                    Enumerable.Range(0, sizeOfGrid).Where(i => i <= p.Y && (i == 0 || forbiddenCells[i - 1][p.X])).Max(),
+                    p.X,
+                    Enumerable.Range(0, sizeOfGrid).Where(i => i >= p.Y && (i == sizeOfGrid - 1 || forbiddenCells[i + 1][p.X])).Min()
+                ));
+            }
+
+            foreach (Point fp in forbiddenCellPoints)
+            {    
+                if (!((forbiddenCellPoints.Exists(p => p.X == fp.X-1 && p.Y == fp.Y) && //forbiddenCells left and right of fp
+                    forbiddenCellPoints.Exists(p => p.X == fp.X+1 && p.Y == fp.Y)) ||
+                    (forbiddenCellPoints.Exists(p => p.X == fp.X && p.Y == fp.Y-1) && //forbiddenCells above and below fp
+                    forbiddenCellPoints.Exists(p => p.X == fp.X && p.Y == fp.Y+1)) ||
+                    (fp.X == 0 && forbiddenCellPoints.Exists(p => p.X == 1 && p.Y == fp.Y)) || //fp in left most column and forbiddenCell to right
+                    (fp.X == sizeOfGrid-1 && forbiddenCellPoints.Exists(p => p.X == sizeOfGrid-2 && p.Y == fp.Y)) || //fp in right most column and forbiddenCell to left
+                    (fp.Y == 0 && forbiddenCellPoints.Exists(p => p.X == fp.X && p.Y == 1)) || //fp in top most row and forbiddenCell below
+                    (fp.Y == sizeOfGrid - 1 && forbiddenCellPoints.Exists(p => p.X == fp.X && p.Y == sizeOfGrid - 2)))) //fp in bottom most row and forbiddenCell above
+                {
+
+                }
+            }
 
             return returnValue;
         }
