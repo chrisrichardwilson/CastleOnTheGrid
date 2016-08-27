@@ -53,6 +53,31 @@ namespace Castle_on_the_Grid
         }
     }
 
+    //public struct LinkedPoint
+    //{
+    //    public Point P;
+    //    public List<Point> LinkedPoints;
+
+    //    public LinkedPoint(Point p, List<Point> linkedPoints)
+    //    {
+    //        P = p;
+    //        LinkedPoints = linkedPoints;
+    //    }
+    //}
+
+    //public struct PointScore
+    //{
+    //    public Point P;
+    //    public int Score;
+
+    //    public PointScore(int x, int y, int score = 0)
+    //    {
+    //        P.X = x;
+    //        P.Y = y;
+    //        Score = score;
+    //    }
+    //}
+
     class CastleSolver
     {
         const char forbiddenCellChar = 'X';
@@ -67,9 +92,10 @@ namespace Castle_on_the_Grid
             readInput();
             List<Line> interestingLines = getInterestingLines();
             List<Point> intersections = getIntersections(interestingLines);
+            Dictionary<Point, List<Point>> tree = getTree(intersections);
             showGridWithIntersections(intersections);
-        }        
-
+        }
+        
         /// <summary>
         /// read console inputs and populate sizeOfGrid, forbiddenCells, start and end
         /// </summary>
@@ -196,19 +222,50 @@ namespace Castle_on_the_Grid
             {
                 //for each crossing line where l vertical and crossingLine horizontal
                 foreach (Line crossingLine in
-                    interestingLines.Where(l2 => l.Start.X == l.End.X && l2.Start.X != l2.End.X && 
+                    interestingLines.Where(l2 => l.Start.X == l.End.X && l2.Start.X != l2.End.X &&
                     l.Start.X >= l2.Start.X && l.Start.X <= l2.End.X &&
                     l.Start.Y <= l2.Start.Y && l.End.Y >= l2.Start.Y))
                     returnValue.Add(new Point(l.Start.X, crossingLine.Start.Y));
                 //for each crossing line where l horizonal and crossingLine vertical
                 foreach (Line crossingLine in
-                    interestingLines.Where(l2 => l.Start.Y == l.End.Y && l2.Start.Y != l2.End.Y && 
+                    interestingLines.Where(l2 => l.Start.Y == l.End.Y && l2.Start.Y != l2.End.Y &&
                     l.Start.Y >= l2.Start.Y && l.Start.Y <= l2.End.Y &&
                     l.Start.X <= l2.Start.X && l.End.X >= l2.Start.X))
                     returnValue.Add(new Point(crossingLine.Start.X, l.Start.Y));
             }
 
             returnValue = returnValue.Distinct().ToList();
+            return returnValue;
+        }
+
+        /// <summary>
+        /// Gets the search tree, all the intersection points and which other points they are directly connected to
+        /// </summary>
+        /// <param name="intersections"></param>
+        /// <returns></returns>
+        private Dictionary<Point, List<Point>> getTree(List<Point> intersections)
+        {
+            Dictionary<Point, List<Point>> returnValue = new Dictionary<Point, List<Point>>();
+
+            foreach (Point p1 in intersections)
+            {
+                foreach (Point p2 in intersections.Where(p => p.X != p1.X || p.Y != p1.Y))
+                {
+                       //points in the same column and no forbiddenCells in between
+                    if ((p1.X == p2.X && !forbiddenCellPoints.Any
+                        (p => p.X == p1.X && p.Y >= Math.Min(p1.Y, p2.Y) && p.Y <= Math.Max(p1.Y, p2.Y))) ||
+                        //points in the same row and no forbiddenCells in between
+                        (p1.Y == p2.Y && !forbiddenCellPoints.Any
+                        (p => p.Y == p1.Y && p.X >= Math.Min(p1.X, p2.X) && p.X <= Math.Max(p1.X, p2.X))))
+                    {
+                        if (!returnValue.ContainsKey(p1))
+                            returnValue.Add(p1, new List<Point>() { p2 });
+                        else
+                            returnValue[p1].Add(p2);
+                    }                                        
+                }
+            }
+
             return returnValue;
         }
 
