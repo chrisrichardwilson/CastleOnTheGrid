@@ -53,31 +53,6 @@ namespace Castle_on_the_Grid
         }
     }
 
-    //public struct LinkedPoint
-    //{
-    //    public Point P;
-    //    public List<Point> LinkedPoints;
-
-    //    public LinkedPoint(Point p, List<Point> linkedPoints)
-    //    {
-    //        P = p;
-    //        LinkedPoints = linkedPoints;
-    //    }
-    //}
-
-    //public struct PointScore
-    //{
-    //    public Point P;
-    //    public int Score;
-
-    //    public PointScore(int x, int y, int score = 0)
-    //    {
-    //        P.X = x;
-    //        P.Y = y;
-    //        Score = score;
-    //    }
-    //}
-
     class CastleSolver
     {
         const char forbiddenCellChar = 'X';
@@ -93,9 +68,12 @@ namespace Castle_on_the_Grid
             List<Line> interestingLines = getInterestingLines();
             List<Point> intersections = getIntersections(interestingLines);
             Dictionary<Point, List<Point>> tree = getTree(intersections);
-            showGridWithIntersections(intersections);
-        }
-        
+            //int minimumTreeMoves = searchTreeForMinimum(tree, start, new Dictionary<Point, int>(), new List<Point>());
+            int minimumTreeMoves = dijkstraSearchForMin(tree);
+            //showGridWithIntersections(intersections);
+            Console.WriteLine(minimumTreeMoves);            
+        }        
+
         /// <summary>
         /// read console inputs and populate sizeOfGrid, forbiddenCells, start and end
         /// </summary>
@@ -122,10 +100,50 @@ namespace Castle_on_the_Grid
             }
 
             int[] positionNumbers = Array.ConvertAll(Console.ReadLine().Split(' '), Int32.Parse);
-            start.X = positionNumbers[0];
-            start.Y = positionNumbers[1];
-            end.X = positionNumbers[2];
-            end.Y = positionNumbers[3];
+            start.X = positionNumbers[1];
+            start.Y = positionNumbers[0];
+            end.X = positionNumbers[3];
+            end.Y = positionNumbers[2];
+        }
+
+        private void readInputTest()
+        {
+            sizeOfGrid = int.Parse(Console.ReadLine());
+
+            int x = 0;
+            int y = 0;
+            for (int i = 0; i < sizeOfGrid; i++)
+            {
+                StringBuilder sb = new StringBuilder();                
+                Random r = new Random(i);
+                for (int j = 0; j < sizeOfGrid; j++)
+                {
+                    if (r.NextDouble() > 0.85)
+                        sb.Append('X');
+                    else
+                        sb.Append('.');
+                }
+
+                string row = sb.ToString();
+                Console.WriteLine(row);
+                List<bool> rowForbiddenCells = new List<bool>();
+                foreach (char cell in row)
+                {
+                    rowForbiddenCells.Add(cell == forbiddenCellChar);
+                    if ((cell == forbiddenCellChar))
+                        forbiddenCellPoints.Add(new Point(x, y));
+                    x++;
+                }
+                forbiddenCells.Add(rowForbiddenCells);
+                y++;
+                x = 0;
+            }
+
+            int[] positionNumbers = Array.ConvertAll(Console.ReadLine().Split(' '), Int32.Parse);
+            start.X = positionNumbers[1];
+            start.Y = positionNumbers[0];
+            end.X = positionNumbers[3];
+            end.Y = positionNumbers[2];
         }
 
         /// <summary>
@@ -267,6 +285,55 @@ namespace Castle_on_the_Grid
             }
 
             return returnValue;
+        }
+
+        private int dijkstraSearchForMin(Dictionary<Point, List<Point>> tree)
+        {
+            List<Point> unvisitedNodes = new List<Point>(tree.Keys.ToList());
+            Dictionary<Point, int> minimumCost = new Dictionary<Point, int>();
+            tree.Keys.ToList().ForEach(p => minimumCost.Add(p, int.MaxValue));
+            minimumCost[start] = 0;
+
+            return recursiveSearch(tree, unvisitedNodes, start, minimumCost);
+        }
+
+        private int recursiveSearch(Dictionary<Point, List<Point>> tree, List<Point> unvisitedNodes, Point currentPoint, Dictionary<Point, int> minimumCost)
+        {
+            if (currentPoint.X == end.X && currentPoint.Y == end.Y)
+                return minimumCost[end];
+
+            tree[currentPoint].ForEach(p => minimumCost[p] = Math.Min(minimumCost[currentPoint] + 1, minimumCost[p]));
+            unvisitedNodes.Remove(currentPoint);
+
+            return recursiveSearch(tree, unvisitedNodes, unvisitedNodes.OrderBy(n => minimumCost[n]).First(), minimumCost);
+        }
+
+        private int searchTreeForMinimum(Dictionary<Point, List<Point>> tree, Point startPoint, Dictionary<Point, int> minimumScores, List<Point> route)
+        {
+            int shortestRoute = int.MaxValue;
+            
+            if (!minimumScores.ContainsKey(startPoint))
+                minimumScores.Add(startPoint, route.Count);
+            else
+                minimumScores[startPoint] = Math.Min(route.Count, minimumScores[startPoint]);
+            route.Add(startPoint);
+
+            foreach (Point p in tree[startPoint])
+            {
+                if (minimumScores.ContainsKey(p) && minimumScores[p] < route.Count)
+                    continue;
+
+                if (p.X == end.X && p.Y == end.Y)
+                {
+                    return route.Count;
+                }
+                else
+                {                                        
+                    shortestRoute = Math.Min(searchTreeForMinimum(tree, p, minimumScores, new List<Point>(route)), shortestRoute);
+                }
+            }
+
+            return shortestRoute;
         }
 
         private void showGridWithIntersections(List<Point> intersections)
