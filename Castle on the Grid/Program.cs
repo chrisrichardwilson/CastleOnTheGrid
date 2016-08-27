@@ -21,26 +21,31 @@ namespace Castle_on_the_Grid
 
     public struct Point
     {
+        public int X;
+        public int Y;
+
         public Point(int x, int y)
         {
             X = x;
             Y = y;
-        }
+        }        
 
-        public int X;
-        public int Y;
+        public override string ToString()
+        {
+            return string.Format("{0}, {1}", X, Y);
+        }
     }
 
     public struct Line
     {
+        public Point Start;
+        public Point End;
+
         public Line(int x1, int y1, int x2, int y2)
         {
             Start = new Point(x1, y1);
             End = new Point(x2, y2);
         }
-
-        public Point Start;
-        public Point End;
 
         public override string ToString()
         {
@@ -62,7 +67,8 @@ namespace Castle_on_the_Grid
             readInput();
             List<Line> interestingLines = getInterestingLines();
             List<Point> intersections = getIntersections(interestingLines);
-        }
+            showGridWithIntersections(intersections);
+        }        
 
         /// <summary>
         /// read console inputs and populate sizeOfGrid, forbiddenCells, start and end
@@ -182,9 +188,50 @@ namespace Castle_on_the_Grid
             return returnValue;
         }
 
-        private List<Point> getIntersections(List<Point> interestingLines)
+        private List<Point> getIntersections(List<Line> interestingLines)
         {
-            throw new NotImplementedException();
+            List<Point> returnValue = new List<Point>();
+
+            foreach (Line l in interestingLines)
+            {
+                //for each crossing line where l vertical and crossingLine horizontal
+                foreach (Line crossingLine in
+                    interestingLines.Where(l2 => l.Start.X == l.End.X && l2.Start.X != l2.End.X && 
+                    l.Start.X >= l2.Start.X && l.Start.X <= l2.End.X &&
+                    l.Start.Y <= l2.Start.Y && l.End.Y >= l2.Start.Y))
+                    returnValue.Add(new Point(l.Start.X, crossingLine.Start.Y));
+                //for each crossing line where l horizonal and crossingLine vertical
+                foreach (Line crossingLine in
+                    interestingLines.Where(l2 => l.Start.Y == l.End.Y && l2.Start.Y != l2.End.Y && 
+                    l.Start.Y >= l2.Start.Y && l.Start.Y <= l2.End.Y &&
+                    l.Start.X <= l2.Start.X && l.End.X >= l2.Start.X))
+                    returnValue.Add(new Point(crossingLine.Start.X, l.Start.Y));
+            }
+
+            returnValue = returnValue.Distinct().ToList();
+            return returnValue;
+        }
+
+        private void showGridWithIntersections(List<Point> intersections)
+        {
+            for (int y = 0; y < sizeOfGrid; y++)
+            {
+                for (int x = 0; x < sizeOfGrid; x++)
+                {                    
+                    if (start.X == x && start.Y == y)
+                        Console.Write('S');
+                    else if (end.X == x && end.Y == y)
+                        Console.Write('E');
+                    else if (forbiddenCells[y][x])
+                        Console.Write('X');
+                    else if (intersections.Contains(new Point(x, y)))
+                        Console.Write('+');
+                    else
+                        Console.Write('.');                    
+                }
+                Console.WriteLine();
+
+            }
         }
 
     }
