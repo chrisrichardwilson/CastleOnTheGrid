@@ -41,6 +41,11 @@ namespace Castle_on_the_Grid
 
         public Point Start;
         public Point End;
+
+        public override string ToString()
+        {
+            return string.Format("{0}, {1} to {2}, {3}", Start.X, Start.Y, End.X, End.Y);
+        }
     }
 
     class CastleSolver
@@ -55,7 +60,8 @@ namespace Castle_on_the_Grid
         public void Solve()
         {
             readInput();
-            getInterestingLines();
+            List<Line> interestingLines = getInterestingLines();
+            List<Point> intersections = getIntersections(interestingLines);
         }
 
         /// <summary>
@@ -100,6 +106,7 @@ namespace Castle_on_the_Grid
 
             foreach (Point p in new List<Point>() { start, end })
             {
+                //add horizontal line going through the start/end, bounded by edges of grid or forbidden cells
                 returnValue.Add(new Line
                 (
                     Enumerable.Range(0, sizeOfGrid) //try all integers up to the size of the grid
@@ -111,7 +118,7 @@ namespace Castle_on_the_Grid
                     p.Y
                 ));
 
-                //add vertical line going through the p/end, bounded by edges of grid or forbidden cells
+                //add vertical line going through the start/end, bounded by edges of grid or forbidden cells
                 returnValue.Add(new Line
                 (
                     p.X,
@@ -123,6 +130,7 @@ namespace Castle_on_the_Grid
 
             foreach (Point fp in forbiddenCellPoints)
             {    
+                //ignore forbidden cells that have 2 other forbidden cells in the same direction
                 if (!((forbiddenCellPoints.Exists(p => p.X == fp.X-1 && p.Y == fp.Y) && //forbiddenCells left and right of fp
                     forbiddenCellPoints.Exists(p => p.X == fp.X+1 && p.Y == fp.Y)) ||
                     (forbiddenCellPoints.Exists(p => p.X == fp.X && p.Y == fp.Y-1) && //forbiddenCells above and below fp
@@ -132,11 +140,51 @@ namespace Castle_on_the_Grid
                     (fp.Y == 0 && forbiddenCellPoints.Exists(p => p.X == fp.X && p.Y == 1)) || //fp in top most row and forbiddenCell below
                     (fp.Y == sizeOfGrid - 1 && forbiddenCellPoints.Exists(p => p.X == fp.X && p.Y == sizeOfGrid - 2)))) //fp in bottom most row and forbiddenCell above
                 {
-
+                    //if there isn't a forbidden cell directly above this one, add horizontal line above
+                    if (fp.Y > 0 && !forbiddenCellPoints.Any(fc => fc.X == fp.X && fc.Y == fp.Y - 1))
+                        returnValue.Add(new Line
+                        (
+                            Enumerable.Range(0, sizeOfGrid).Where(i => i <= fp.X && (i == 0 || forbiddenCells[fp.Y-1][i - 1])).Max(),
+                            fp.Y - 1,
+                            Enumerable.Range(0, sizeOfGrid).Where(i => i >= fp.X && (i == sizeOfGrid - 1 || forbiddenCells[fp.Y-1][i + 1])).Min(),
+                            fp.Y - 1
+                        ));
+                    //if there isn't a forbidden cell directly below this one, add horizontal line below
+                    if (fp.Y < sizeOfGrid-1 && !forbiddenCellPoints.Any(fc => fc.X == fp.X && fc.Y == fp.Y + 1))
+                        returnValue.Add(new Line
+                        (
+                            Enumerable.Range(0, sizeOfGrid).Where(i => i <= fp.X && (i == 0 || forbiddenCells[fp.Y + 1][i - 1])).Max(),
+                            fp.Y + 1,
+                            Enumerable.Range(0, sizeOfGrid).Where(i => i >= fp.X && (i == sizeOfGrid - 1 || forbiddenCells[fp.Y + 1][i + 1])).Min(),
+                            fp.Y + 1
+                        ));
+                    //if there isn't a forbidden cell directly right of this one, add vertical line to the right
+                    if (fp.X < sizeOfGrid-1 && !forbiddenCellPoints.Any(fc => fc.Y == fp.Y && fc.X == fp.X + 1))
+                        returnValue.Add(new Line
+                        (
+                            fp.X+1,
+                            Enumerable.Range(0, sizeOfGrid).Where(i => i <= fp.Y && (i == 0 || forbiddenCells[i - 1][fp.X+1])).Max(),
+                            fp.X+1,
+                            Enumerable.Range(0, sizeOfGrid).Where(i => i >= fp.Y && (i == sizeOfGrid - 1 || forbiddenCells[i + 1][fp.X+1])).Min()
+                        ));
+                    //if there isn't a forbidden cell directly left of this one, add vertical line to the left
+                    if (fp.X > 0 && !forbiddenCellPoints.Any(fc => fc.Y == fp.Y && fc.X == fp.X + 1))
+                        returnValue.Add(new Line
+                        (
+                            fp.X-1,
+                            Enumerable.Range(0, sizeOfGrid).Where(i => i <= fp.Y && (i == 0 || forbiddenCells[i - 1][fp.X - 1])).Max(),
+                            fp.X-1,
+                            Enumerable.Range(0, sizeOfGrid).Where(i => i >= fp.Y && (i == sizeOfGrid - 1 || forbiddenCells[i + 1][fp.X - 1])).Min()
+                        ));
                 }
             }
 
             return returnValue;
+        }
+
+        private List<Point> getIntersections(List<Point> interestingLines)
+        {
+            throw new NotImplementedException();
         }
 
     }
