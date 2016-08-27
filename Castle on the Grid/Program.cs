@@ -67,8 +67,7 @@ namespace Castle_on_the_Grid
             readInput();
             List<Line> interestingLines = getInterestingLines();
             List<Point> intersections = getIntersections(interestingLines);
-            Dictionary<Point, List<Point>> tree = getTree(intersections);
-            //int minimumTreeMoves = searchTreeForMinimum(tree, start, new Dictionary<Point, int>(), new List<Point>());
+            Dictionary<Point, List<Point>> tree = getTree(intersections);            
             int minimumTreeMoves = dijkstraSearchForMin(tree);
             //showGridWithIntersections(intersections);
             Console.WriteLine(minimumTreeMoves);            
@@ -307,35 +306,7 @@ namespace Castle_on_the_Grid
 
             return recursiveSearch(tree, unvisitedNodes, unvisitedNodes.OrderBy(n => minimumCost[n]).First(), minimumCost);
         }
-
-        private int searchTreeForMinimum(Dictionary<Point, List<Point>> tree, Point startPoint, Dictionary<Point, int> minimumScores, List<Point> route)
-        {
-            int shortestRoute = int.MaxValue;
-            
-            if (!minimumScores.ContainsKey(startPoint))
-                minimumScores.Add(startPoint, route.Count);
-            else
-                minimumScores[startPoint] = Math.Min(route.Count, minimumScores[startPoint]);
-            route.Add(startPoint);
-
-            foreach (Point p in tree[startPoint])
-            {
-                if (minimumScores.ContainsKey(p) && minimumScores[p] < route.Count)
-                    continue;
-
-                if (p.X == end.X && p.Y == end.Y)
-                {
-                    return route.Count;
-                }
-                else
-                {                                        
-                    shortestRoute = Math.Min(searchTreeForMinimum(tree, p, minimumScores, new List<Point>(route)), shortestRoute);
-                }
-            }
-
-            return shortestRoute;
-        }
-
+      
         private void showGridWithIntersections(List<Point> intersections)
         {
             for (int y = 0; y < sizeOfGrid; y++)
